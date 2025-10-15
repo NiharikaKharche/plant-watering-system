@@ -1,9 +1,20 @@
+/*
+ * Project: Soil Moisture–Based Automatic Watering System
+ * Language: C (Turbo C Graphics)
+ * Author: Niharika Kharche
+ * Description:
+ * A graphical simulation that automatically waters a plant based on
+ * soil moisture levels and time of day (Day/Night). Uses C graphics
+ * to visualize a tank, pipe, plant, and animated water droplets.
+ */
+
 #include <graphics.h>
 #include <conio.h>
 #include <dos.h>
 #include <stdio.h>
 #include <stdlib.h>
 
+// Function Declarations
 void delay_asm();
 void drawPlant();
 void drawPot();
@@ -14,6 +25,10 @@ void displayMoisture(float moisture);
 void drawMoistureStatusBar(float moisture);
 void clearScreenWithAssembly();
 
+/* 
+ * Clears the console screen using BIOS interrupt (INT 10h)
+ * for faster low-level screen reset.
+ */
 void clearScreenWithAssembly()
 {
     asm {
@@ -26,6 +41,10 @@ void clearScreenWithAssembly()
     }
 }
 
+/*
+ * Custom delay function using BIOS timer interrupt.
+ * Provides hardware-timed animation delay.
+ */
 void delay_asm()
 {
     asm mov ah, 0
@@ -38,6 +57,9 @@ delay_lp:
     asm je delay_lp
 }
 
+/*
+ * Draws a simple green plant with a stem and leaves.
+ */
 void drawPlant()
 {
     setcolor(GREEN);
@@ -48,6 +70,9 @@ void drawPlant()
     line(500, 300, 510, 290);
 }
 
+/*
+ * Draws the brown pot for the plant.
+ */
 void drawPot()
 {
     int pot[] = {470, 350, 530, 350, 510, 390, 490, 390, 470, 350};
@@ -56,6 +81,9 @@ void drawPot()
     fillpoly(5, pot);
 }
 
+/*
+ * Draws a blue water tank with elliptical top and bottom.
+ */
 void drawTank()
 {
     int left=150, right=230, top=150, bottom=250;
@@ -69,6 +97,10 @@ void drawTank()
     outtextxy(155, 260, "Water Tank");
 }
 
+/*
+ * Draws the connecting horizontal pipe.
+ * When 'flow' is 1, fills it with blue to indicate water flow.
+ */
 void drawPipe(int flow)
 {
     setcolor(WHITE);
@@ -80,6 +112,9 @@ void drawPipe(int flow)
     }
 }
 
+/*
+ * Draws a dark blue droplet used for animation.
+ */
 void drawDroplet(int x, int y)
 {
     setcolor(BLUE);
@@ -87,6 +122,9 @@ void drawDroplet(int x, int y)
     fillellipse(x, y, 3, 5);
 }
 
+/*
+ * Displays the current soil moisture percentage on screen.
+ */
 void displayMoisture(float moisture)
 {
     char txt[40];
@@ -95,6 +133,10 @@ void displayMoisture(float moisture)
     outtextxy(250, 50, txt);
 }
 
+/*
+ * Displays a color-coded soil condition bar:
+ * Red = Dry, Green = Normal, Blue = Over Moist.
+ */
 void drawMoistureStatusBar(float moisture)
 {
     setcolor(WHITE);
@@ -120,6 +162,11 @@ void drawMoistureStatusBar(float moisture)
     }
 }
 
+/*
+ * Main Function
+ * Controls program flow: input, display, watering logic,
+ * and droplet animation according to soil moisture and time of day.
+ */
 int main()
 {
     int gd = DETECT, gm;
@@ -136,20 +183,22 @@ int main()
     printf("Enter current soil moisture (in percentage): ");
     scanf("%f", &moisture);
 
+    // Determine Day/Night based on system time
     gettime(&t);
     if(t.ti_hour >= 19 || t.ti_hour < 6)
     {
-        timeChoice = 2;
-        totalDroplets = 5;
+        timeChoice = 2;     // Night mode
+        totalDroplets = 5;  // Fewer drops at night
     }
     else
     {
-        timeChoice = 1;
-        totalDroplets = 10;
+        timeChoice = 1;     // Day mode
+        totalDroplets = 10; // More drops during day
     }
 
     initgraph(&gd, &gm, "C:\\TC\\BGI");
 
+    // Set background color based on mode
     if(timeChoice == 2)
     {
         setbkcolor(DARKGRAY);
@@ -165,12 +214,14 @@ int main()
         outtextxy(260, 20, "Mode: Day");
     }
 
+    // Initial setup
     dropletX = 500;
     dropletYStart = 210;
     dropletYEnd = 350;
     steps = 18;
     flow = 0;
 
+    // Draw initial components
     drawPot();
     drawPlant();
     drawTank();
@@ -179,11 +230,13 @@ int main()
     drawMoistureStatusBar(moisture);
     delay(1000);
 
-    if(moisture < 30.0)
+    // Watering / Draining Logic
+    if(moisture < 30.0)     // Dry soil
     {
         outtextxy(250, 120, "Soil Dry! Watering Plant...");
         flow = 1;
 
+        // Animate water drops
         for(i = 0; i < totalDroplets; i++)
         {
             dy = (float)(dropletYEnd - dropletYStart) / steps;
@@ -197,6 +250,7 @@ int main()
                 else
                     setbkcolor(LIGHTBLUE);
 
+                // Redraw UI elements each frame
                 setcolor(WHITE);
                 if(timeChoice == 2)
                     outtextxy(260, 20, "Mode: Night");
@@ -217,11 +271,12 @@ int main()
         }
         outtextxy(250, 420, "Watering Complete!");
     }
-    else if(moisture > 70.0)
+    else if(moisture > 70.0)  // Over-moist soil
     {
         outtextxy(250, 120, "Soil Over Moist - Draining...");
         flow = 1;
 
+        // Animate reverse flow (draining)
         for(i = 0; i < totalDroplets; i++)
         {
             dy = (float)(dropletYEnd - dropletYStart) / steps;
@@ -255,7 +310,7 @@ int main()
         }
         outtextxy(250, 420, "Drainage Complete!");
     }
-    else
+    else   // Normal condition
     {
         outtextxy(250, 120, "Soil Moisture Normal - No Action Needed.");
     }
