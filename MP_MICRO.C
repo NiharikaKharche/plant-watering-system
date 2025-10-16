@@ -12,7 +12,6 @@
 #include <conio.h>
 #include <dos.h>
 #include <stdio.h>
-#include <stdlib.h>
 
 // Function Declarations
 void delay_asm();
@@ -319,3 +318,4 @@ int main()
     closegraph();
     return 0;
 }
+
